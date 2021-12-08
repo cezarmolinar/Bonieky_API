@@ -1,9 +1,27 @@
 import { Request, Response } from 'express';
+import { unlink } from 'fs/promises';
+import sharp from 'sharp';
 
 import { Phrase } from '../models/Phrase';
 
 export const ping = (req: Request, res: Response) => {
     res.json({ pong: true });
+}
+
+export const uploadFile = async (req: Request, res: Response) => {
+    if (req.file) {
+        await sharp(req.file.path)
+            .resize(300, 300, { fit: sharp.fit.inside })
+            .toFormat('jpeg')
+            .toFile(`./public/media/${req.file.filename}.jpeg`);
+
+        await unlink(req.file.path);
+
+        res.json({});
+    } else {
+        res.status(400);
+        res.json({ error: 'Arquivo não enviado' });
+    }
 }
 
 export const createPhrase = async (req: Request, res: Response) => {
